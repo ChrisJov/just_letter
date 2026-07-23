@@ -1,0 +1,422 @@
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root {
+  /* Palette — soft light blue, elegant and cozy */
+  --sky-100: #eaf6ff;
+  --sky-200: #d6eeff;
+  --sky-300: #bfe4ff;
+  --sky-400: #a9d8ff;
+  --sky-500: #8ec7f2;
+  --white: #ffffff;
+
+  --paper: #fdfeff;
+  --paper-line: #eaf3fb;
+  --ink: #3e5c76;
+  --ink-soft: #6f8ba8;
+
+  --envelope-flap: #cde7ff;
+  --envelope-flap-shade: #b8dcf9;
+  --envelope-pocket: #dcf0ff;
+  --envelope-back: #eef7ff;
+  --seal-glow: rgba(158, 203, 246, 0.65);
+
+  --shadow-soft: rgba(93, 138, 179, 0.22);
+  --shadow-strong: rgba(74, 116, 158, 0.32);
+
+  --font-script: "Dancing Script", cursive;
+  --font-body: "Poppins", sans-serif;
+
+  --ease-elegant: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: linear-gradient(
+    160deg,
+    var(--white) 0%,
+    var(--sky-100) 30%,
+    var(--sky-200) 55%,
+    var(--sky-300) 78%,
+    var(--sky-400) 100%
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
+  overflow-x: hidden; /* never allow horizontal scroll */
+  position: relative;
+}
+
+/* Ambient floating light blobs for atmosphere */
+.ambient-light {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+}
+.ambient-light--one {
+  width: clamp(180px, 40vw, 420px);
+  height: clamp(180px, 40vw, 420px);
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(circle, var(--sky-300), transparent 70%);
+  animation: drift-one 16s ease-in-out infinite;
+}
+.ambient-light--two {
+  width: clamp(200px, 45vw, 460px);
+  height: clamp(200px, 45vw, 460px);
+  bottom: -12%;
+  right: -12%;
+  background: radial-gradient(circle, var(--sky-400), transparent 70%);
+  animation: drift-two 20s ease-in-out infinite;
+}
+
+@keyframes drift-one {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, 20px); }
+}
+@keyframes drift-two {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-25px, -25px); }
+}
+
+/* ============================================================
+   SCENE / LAYOUT
+   ============================================================ */
+.scene {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: clamp(28px, 8vh, 64px) 16px 64px;
+}
+
+.envelope-stage {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 80vh;
+  justify-content: center;
+}
+
+/* ============================================================
+   ENVELOPE
+   ============================================================ */
+.envelope {
+  --env-w: clamp(210px, 62vw, 320px);
+  --env-h: calc(var(--env-w) * 0.64);
+
+  position: relative;
+  width: var(--env-w);
+  height: var(--env-h);
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: float 4.5s ease-in-out infinite;
+  transition: transform 0.4s var(--ease-elegant);
+}
+
+.envelope:hover {
+  transform: translateY(-4px) scale(1.015);
+}
+
+.envelope:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+.envelope:focus-visible {
+  outline: 2px solid var(--sky-500);
+  outline-offset: 6px;
+  border-radius: 10px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Once opening begins, stop the idle float/hover transforms cleanly */
+.envelope-stage.is-open .envelope {
+  animation: none;
+}
+
+/* Soft glow beneath the envelope */
+.envelope::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  width: 70%;
+  height: 30px;
+  background: radial-gradient(ellipse at center, var(--seal-glow), transparent 75%);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  filter: blur(6px);
+  z-index: 0;
+  transition: opacity 0.6s ease;
+}
+
+.envelope-stage.is-open .envelope::before {
+  opacity: 0.35;
+}
+
+/* Back panel — the inside of the envelope, revealed as the flap opens */
+.envelope__back {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--envelope-back), var(--sky-200));
+  border-radius: 6px;
+  box-shadow: inset 0 0 24px rgba(160, 205, 245, 0.35);
+  z-index: 1;
+}
+
+/* Front pocket — lower portion of the envelope, always sits above the letter */
+.envelope__pocket {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--envelope-pocket), var(--sky-300));
+  clip-path: polygon(0% 100%, 100% 100%, 100% 42%, 50% 18%, 0% 42%);
+  border-radius: 0 0 6px 6px;
+  z-index: 3;
+  box-shadow: 0 10px 24px var(--shadow-soft);
+}
+
+/* Top flap — opens upward and folds behind the envelope */
+.envelope__flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 64%;
+  background: linear-gradient(160deg, var(--envelope-flap), var(--envelope-flap-shade));
+  clip-path: polygon(0% 0%, 100% 0%, 50% 66%);
+  transform-origin: top center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  z-index: 4;
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 6px 14px var(--shadow-soft);
+  transition: transform 0.85s var(--ease-elegant), box-shadow 0.85s ease;
+}
+
+.envelope-stage.is-open .envelope__flap {
+  transform: rotateX(178deg);
+  box-shadow: 0 2px 6px var(--shadow-soft);
+  z-index: 1;
+}
+
+/* Little heart seal resting on the flap point */
+.envelope__seal {
+  position: absolute;
+  top: calc(64% - 20px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(20px, 5vw, 26px);
+  z-index: 5;
+  filter: drop-shadow(0 2px 6px var(--shadow-soft));
+  transition: opacity 0.5s ease, transform 0.6s var(--ease-elegant);
+  pointer-events: none;
+}
+
+.envelope-stage.is-open .envelope__seal {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+}
+
+/* Label beneath the envelope */
+.envelope-label {
+  margin-top: clamp(20px, 4vh, 32px);
+  font-family: var(--font-script);
+  font-weight: 600;
+  font-size: clamp(28px, 7vw, 42px);
+  color: var(--ink);
+  text-shadow: 0 2px 10px var(--shadow-soft);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.envelope-hint {
+  margin-top: 6px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  opacity: 0.75;
+  animation: pulse-hint 2.4s ease-in-out infinite;
+}
+
+.envelope-stage.is-open .envelope-label,
+.envelope-stage.is-open .envelope-hint {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+@keyframes pulse-hint {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+
+/* ============================================================
+   LETTER
+   ============================================================ */
+.letter {
+  /* While closed, the letter sits tucked inside the envelope, hidden
+     beneath the flap and pocket. It is absolutely positioned only for
+     this initial "inside the envelope" state. */
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 92%;
+  max-width: 460px;
+  transform: translate(-50%, 4%) scale(0.92);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: transform 1s var(--ease-elegant) 0.35s,
+              opacity 0.8s ease 0.35s;
+}
+
+.letter__inner {
+  background: linear-gradient(180deg, var(--white), var(--paper));
+  border-radius: 16px;
+  box-shadow: 0 18px 45px var(--shadow-strong), 0 4px 12px var(--shadow-soft);
+  padding: clamp(24px, 6vw, 48px) clamp(20px, 5vw, 42px);
+  /* No fixed height — the paper always grows with its content */
+  min-height: fit-content;
+  overflow: visible; /* never crop the letter */
+}
+
+/* Reveal state: paper slides up out of the envelope */
+.envelope-stage.is-open .letter {
+  transform: translate(-50%, -46%) scale(1);
+  opacity: 1;
+  z-index: 6;
+}
+
+/* Released state: JS applies this once the reveal animation finishes.
+   The letter centers itself in the viewport with fixed positioning so
+   it floats above the envelope and is always readable. */
+.letter.is-released {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 92%;
+  max-width: 480px;
+  z-index: 10;
+  transition: none;
+  animation: settle-in 0.6s var(--ease-elegant);
+}
+
+@keyframes settle-in {
+  from { opacity: 0.85; }
+  to { opacity: 1; }
+}
+
+/* Once released, the envelope graphic rests quietly behind the letter,
+   peeking out from the top like it has been set down behind it. */
+.envelope-stage.is-open.is-released .envelope {
+  z-index: 0;
+  transform: translateY(6px) scale(0.97);
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.letter-content {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: clamp(15px, 2.4vw, 17px);
+  line-height: 1.85;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+
+.letter-content p {
+  margin: 0 0 1.2em;
+}
+
+.letter-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* A gentle placeholder so the empty container never looks broken
+   before a real letter is pasted in */
+.letter-content:empty::before {
+  content: "Your words will appear here.";
+  display: block;
+  color: var(--ink-soft);
+  font-style: italic;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 420px) {
+  .letter.is-released {
+    max-width: 94%;
+    width: 94%;
+  }
+}
+
+@media (min-width: 700px) {
+  .letter.is-released {
+    max-width: 560px;
+  }
+}
+
+/* Landscape phones: keep things comfortable and never clipped */
+@media (max-height: 480px) and (orientation: landscape) {
+  .envelope-stage {
+    min-height: auto;
+    padding-top: 24px;
+  }
+  .envelope {
+    --env-w: clamp(180px, 32vh, 260px);
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY — respect reduced motion preferences
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .envelope,
+  .ambient-light--one,
+  .ambient-light--two,
+  .envelope-hint {
+    animation: none !important;
+  }
+  .envelope,
+  .envelope__flap,
+  .letter,
+  .envelope-label,
+  .envelope-hint,
+  .envelope__seal {
+    transition-duration: 0.25s !important;
+  }
+}
